@@ -49,6 +49,7 @@ function createWindow() {
     closable: true, // 允许关闭
     webSecurity: false, // 绕过web安全
     autoHideMenuBar: true, // 自动隐藏菜单栏
+    roundedCorners: false, // 禁用圆角窗口
     ...(process.platform === 'linux' ? { icon } : {}), // Linux系统设置图标
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'), // 预加载脚本
@@ -279,6 +280,20 @@ app.on('before-quit', () => {
   if (mainWindow) {
     mainWindow.removeAllListeners('close') // 移除所有关闭监听器
     mainWindow.close() // 关闭窗口
+  }
+})
+
+// 添加IPC监听器，处理来自渲染进程的关闭窗口请求
+ipcMain.on('close-window', () => {
+  if (mainWindow) {
+    mainWindow.hide() // 隐藏窗口而不是关闭
+  }
+})
+
+// 添加IPC监听器，处理来自渲染进程的最小化窗口请求
+ipcMain.on('minimize-window', () => {
+  if (mainWindow) {
+    mainWindow.minimize() // 最小化窗口
   }
 })
 
