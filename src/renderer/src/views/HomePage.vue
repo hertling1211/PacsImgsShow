@@ -8,14 +8,16 @@
 
       <!-- 欢迎信息 -->
       <div class="welcome-text">
-        <h1 class="app-title">PacsImgsShow</h1>
+        <h1 class="app-title">PacsImgShow</h1>
         <p class="welcome-message">{{ message }}</p>
         <p class="subtitle">专业医学影像查看与管理系统</p>
       </div>
 
       <!-- 功能按钮区 -->
       <div class="action-buttons">
-        <el-button type="primary" size="large" class="action-btn">开始使用</el-button>
+        <el-button type="primary" size="large" class="action-btn" @click="handleStartUsing"
+          >开始使用</el-button
+        >
         <el-button size="large" class="action-btn">选择影像</el-button>
       </div>
     </div>
@@ -43,6 +45,11 @@ export default {
   data() {
     return {
       message: '欢迎使用医学影像查看系统'
+    }
+  },
+  methods: {
+    handleStartUsing() {
+      this.$router.push('/patientList')
     }
   }
 }

@@ -64,8 +64,8 @@ export default {
               link: '#'
             },
             // {
-            //   name: '新建窗口',
-            //   label: 'new-window',
+            //   name: '导入',
+            //   label: 'import',
             //   link: '#'
             // },
             {
@@ -123,6 +123,18 @@ export default {
       // 注意：由于使用CSS方案，这里不需要手动关闭菜单
       // 判断一下item.link是不是为#
       if (item.link === '#') {
+        // 点击打开文件
+        if (item.label === 'open-file') {
+          // 调用主进程的打开文件选择器方法
+          const filePaths = await window.api.openFileDialog()
+          console.log('选择的文件路径:', filePaths)
+        }
+        // 点击打开文件夹
+        if (item.label === 'open-folder') {
+          // 调用主进程的打开文件夹选择器方法
+          const folderPaths = await window.api.openFolderDialog()
+          console.log('选择的文件夹路径:', folderPaths)
+        }
         // handleMenuClick方法中添加判断
         if (item.label === 'exit') {
           // 调用主进程的关闭窗口方法

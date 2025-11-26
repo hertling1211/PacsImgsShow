@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 
 // 导入您的组件
 // 例如：import Home from '../views/Home.vue'
@@ -16,6 +16,11 @@ const routes = [
     component: () => import('../views/Setting.vue')
   },
   {
+    path: '/patientList',
+    name: 'PatientList',
+    component: () => import('../views/PatientList.vue')
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('../views/NotFound.vue')
@@ -24,7 +29,7 @@ const routes = [
 
 // 创建路由实例
 const router = createRouter({
-  history: createWebHashHistory(), // 使用hash模式，适合Electron应用
+  history: createWebHistory(), // 使用history模式
   routes
 })
 

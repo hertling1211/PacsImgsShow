@@ -9,7 +9,11 @@ const api = {
   minimizeWindow: () => ipcRenderer.send('minimize-window'),
   cleanCache: () => ipcRenderer.invoke('clean-cache'),
   checkUpdate: () => ipcRenderer.invoke('check-update'),
-  quitApp: () => ipcRenderer.send('quit-app')
+  quitApp: () => ipcRenderer.send('quit-app'),
+  // 添加打开文件选择器的方法
+  openFileDialog: () => ipcRenderer.invoke('open-file-dialog'),
+  // 添加打开文件夹选择器的方法
+  openFolderDialog: () => ipcRenderer.invoke('open-folder-dialog')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

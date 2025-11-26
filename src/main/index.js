@@ -1,5 +1,15 @@
 // 导入必要的Electron模块和工具
-import { app, shell, BrowserWindow, ipcMain, Tray, Menu, nativeImage, screen } from 'electron'
+import {
+  app,
+  shell,
+  BrowserWindow,
+  ipcMain,
+  Tray,
+  Menu,
+  nativeImage,
+  screen,
+  dialog
+} from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -369,5 +379,54 @@ ipcMain.on('close-window', () => {
 ipcMain.on('minimize-window', () => {
   if (mainWindow) {
     mainWindow.minimize() // 最小化窗口
+  }
+})
+
+/**
+ * 打开文件选择器，允许用户选择文件 只显示.dcm或者是.dicom文件
+ * @returns {Promise<{canceled: boolean, filePath?: string, error?: string}>}
+ */
+ipcMain.handle('open-file-dialog', async () => {
+  const dialogOptions = {
+    title: '选择文件',
+    buttonLabel: '打开',
+    filters: [
+      // { name: '所有文件', extensions: ['*'] },
+      { name: 'DICOM 文件', extensions: ['dcm', 'dicom'] }
+      // 可以添加其他文件类型过滤器
+    ],
+    properties: ['openFile']
+  }
+
+  try {
+    const result = await dialog.showOpenDialog(dialogOptions)
+    if (result.canceled) {
+      return { canceled: true }
+    }
+    return { canceled: false, filePath: result.filePaths[0] }
+  } catch (error) {
+    console.error('打开文件对话框出错:', error)
+    return { canceled: true, error: error.message }
+  }
+})
+/**
+ * 打开文件夹选择器，允许用户选择文件夹
+ */
+ipcMain.handle('open-folder-dialog', async () => {
+  const dialogOptions = {
+    title: '选择文件夹',
+    buttonLabel: '打开',
+    properties: ['openDirectory']
+  }
+
+  try {
+    const result = await dialog.showOpenDialog(dialogOptions)
+    if (result.canceled) {
+      return { canceled: true }
+    }
+    return { canceled: false, folderPath: result.filePaths[0] }
+  } catch (error) {
+    console.error('打开文件夹对话框出错:', error)
+    return { canceled: true, error: error.message }
   }
 })
