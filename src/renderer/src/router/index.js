@@ -11,6 +11,11 @@ const routes = [
     component: () => import('../views/HomePage.vue') // 懒加载组件
   },
   {
+    path: '/settings',
+    name: 'Settings',
+    component: () => import('../views/Setting.vue')
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('../views/NotFound.vue')

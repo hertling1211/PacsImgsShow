@@ -6,7 +6,10 @@ const api = {
   // 添加关闭窗口的方法
   closeWindow: () => ipcRenderer.send('close-window'),
   // 添加最小化窗口的方法
-  minimizeWindow: () => ipcRenderer.send('minimize-window')
+  minimizeWindow: () => ipcRenderer.send('minimize-window'),
+  cleanCache: () => ipcRenderer.invoke('clean-cache'),
+  checkUpdate: () => ipcRenderer.invoke('check-update'),
+  quitApp: () => ipcRenderer.send('quit-app')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

@@ -3,6 +3,7 @@ import { app, shell, BrowserWindow, ipcMain, Tray, Menu, nativeImage, screen } f
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+// import fs from 'fs' // 添加fs模块导入
 
 // 全局变量，用于存储窗口和托盘引用
 let mainWindow = null
@@ -128,27 +129,6 @@ function createTray() {
   // 托盘上下文菜单配置
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: '显示/隐藏窗口',
-      click: () => {
-        if (!mainWindow) return
-
-        if (mainWindow.isVisible()) {
-          mainWindow.hide()
-        } else {
-          // 显示窗口前确保位置和大小正确
-          const newSize = getAdaptiveWindowSize()
-          mainWindow.setBounds({
-            x: 0,
-            y: 0,
-            width: newSize.width,
-            height: newSize.height
-          })
-          mainWindow.show()
-          mainWindow.focus()
-        }
-      }
-    },
-    {
       label: '退出应用', // 退出菜单项
       click: () => {
         // 退出应用前清除引用
@@ -187,6 +167,68 @@ function createTray() {
       mainWindow.focus()
     }
   })
+}
+
+/**
+ * 检查GitHub更新
+ * 从GitHub releases获取最新版本信息
+ */
+async function checkForUpdates() {
+  try {
+    const currentVersion = app.getVersion()
+    const owner = 'hertling1211' // 替换为实际的GitHub用户名
+    const repo = 'PacsImgsShow' // 替换为实际的仓库名
+
+    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/latest`)
+    console.log('checkForUpdates response:', response)
+
+    if (!response.ok) {
+      throw new Error(`Server Connected Failed: ${response.status}`)
+    }
+
+    const latestRelease = await response.json()
+    const latestVersion = latestRelease.tag_name.replace(/^v/, '') // 移除可能的前缀 "v"
+
+    const isUpdateAvailable = compareVersions(latestVersion, currentVersion) > 0
+
+    return {
+      success: true,
+      updateAvailable: isUpdateAvailable,
+      currentVersion,
+      latestVersion,
+      releaseNotes: latestRelease.body,
+      downloadUrl: latestRelease.html_url,
+      assets: latestRelease.assets
+    }
+  } catch (error) {
+    console.error('checkUpdate failed:', error)
+    return {
+      success: false,
+      message: `检查更新失败: ${error.message}`,
+      currentVersion: app.getVersion()
+    }
+  }
+}
+
+/**
+ * 比较版本号
+ * @param {string} v1 版本1
+ * @param {string} v2 版本2
+ * @returns {number} 1: v1 > v2, -1: v1 < v2, 0: 相等
+ */
+function compareVersions(v1, v2) {
+  const parts1 = v1.split('.').map(Number)
+  const parts2 = v2.split('.').map(Number)
+
+  for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+    const part1 = parts1[i] || 0
+    const part2 = parts2[i] || 0
+
+    if (part1 > part2) return 1
+    if (part1 < part2) return -1
+  }
+
+  return 0
 }
 
 // 当 Electron 完成初始化并准备创建浏览器窗口时调用此方法
@@ -233,6 +275,38 @@ app.whenReady().then(() => {
 
   // IPC 测试 - 监听ping消息
   ipcMain.on('ping', () => console.log('pong'))
+
+  // 清理缓存
+  ipcMain.handle('clean-cache', async () => {
+    try {
+      // 清除浏览器缓存
+      if (mainWindow && mainWindow.webContents) {
+        await mainWindow.webContents.session.clearCache()
+      }
+
+      return { success: true, message: '缓存清理成功' }
+    } catch (error) {
+      return { success: false, message: `缓存清理失败: ${error.message}` }
+    }
+  })
+  // 退出应用
+  ipcMain.on('quit-app', () => {
+    app.quit() // 退出应用
+  })
+
+  // 检查更新 - 修复后的完整实现
+  ipcMain.handle('check-update', async () => {
+    try {
+      const updateInfo = await checkForUpdates()
+      return updateInfo
+    } catch (error) {
+      return {
+        success: false,
+        message: `检查更新失败: ${error.message}`,
+        currentVersion: app.getVersion()
+      }
+    }
+  })
 
   // 创建主窗口
   createWindow()
@@ -287,6 +361,7 @@ app.on('before-quit', () => {
 ipcMain.on('close-window', () => {
   if (mainWindow) {
     mainWindow.hide() // 隐藏窗口而不是关闭
+    // app.quit() // 关闭窗口
   }
 })
 
@@ -296,6 +371,3 @@ ipcMain.on('minimize-window', () => {
     mainWindow.minimize() // 最小化窗口
   }
 })
-
-// 在此文件中，您可以包含应用程序其余特定的主进程代码
-// 也可以将它们放在单独的文件中并在此处导入
