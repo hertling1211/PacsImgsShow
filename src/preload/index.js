@@ -10,10 +10,14 @@ const api = {
   cleanCache: () => ipcRenderer.invoke('clean-cache'),
   checkUpdate: () => ipcRenderer.invoke('check-update'),
   quitApp: () => ipcRenderer.send('quit-app'),
-  // 添加打开文件选择器的方法
+  // 打开文件选择器
   openFileDialog: () => ipcRenderer.invoke('open-file-dialog'),
-  // 添加打开文件夹选择器的方法
-  openFolderDialog: () => ipcRenderer.invoke('open-folder-dialog')
+  // 打开文件夹选择器
+  openFolderDialog: () => ipcRenderer.invoke('open-folder-dialog'),
+  // 添加打开文件夹
+  openFolder: (folderPath) => ipcRenderer.invoke('open-folder', folderPath),
+  // 读取文件
+  readFile: (filePath) => ipcRenderer.invoke('read-dicom-file', filePath)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

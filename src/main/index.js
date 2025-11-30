@@ -13,7 +13,8 @@ import {
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-// import fs from 'fs' // 添加fs模块导入
+import fs from 'fs' // 添加fs模块导入
+import path from 'path' // 添加path模块导入
 
 // 全局变量，用于存储窗口和托盘引用
 let mainWindow = null
@@ -383,7 +384,7 @@ ipcMain.on('minimize-window', () => {
 })
 
 /**
- * 打开文件选择器，允许用户选择文件 只显示.dcm或者是.dicom文件
+ * 打开文件选择器，允许用户选择文件 并读取此文件
  * @returns {Promise<{canceled: boolean, filePath?: string, error?: string}>}
  */
 ipcMain.handle('open-file-dialog', async () => {
@@ -405,12 +406,12 @@ ipcMain.handle('open-file-dialog', async () => {
     }
     return { canceled: false, filePath: result.filePaths[0] }
   } catch (error) {
-    console.error('打开文件对话框出错:', error)
+    console.error('open-file-dialog error:', error)
     return { canceled: true, error: error.message }
   }
 })
 /**
- * 打开文件夹选择器，允许用户选择文件夹
+ * 打开文件夹选择器，允许用户选择文件夹并读取文件夹中的文件
  */
 ipcMain.handle('open-folder-dialog', async () => {
   const dialogOptions = {
@@ -420,13 +421,61 @@ ipcMain.handle('open-folder-dialog', async () => {
   }
 
   try {
+    // 调用文件选择器
     const result = await dialog.showOpenDialog(dialogOptions)
-    if (result.canceled) {
+
+    // 检查用户是否取消了选择
+    if (result.canceled || result.filePaths.length === 0) {
       return { canceled: true }
     }
-    return { canceled: false, folderPath: result.filePaths[0] }
+
+    // 读取文件夹中的内容
+    const files = fs.readdirSync(result.filePaths[0])
+    // 拼接一下文件路径
+    const filePaths = files.map((file) => path.join(result.filePaths[0], file))
+    // 返回文件夹中的文件列表
+    return { canceled: false, files: filePaths, folderPath: result.filePaths[0] }
   } catch (error) {
-    console.error('打开文件夹对话框出错:', error)
+    console.error('failed to read folder:', error)
     return { canceled: true, error: error.message }
+  }
+})
+
+// 根据文件路径解析文件并返回二进制数据
+ipcMain.handle('read-dicom-file', async (event, filePath) => {
+  try {
+    // 使用 fs.promises.readFile 而不是 fs.readFile
+    const fileBuffer = await fs.promises.readFile(filePath)
+
+    return {
+      path: filePath,
+      size: fileBuffer.length,
+      buffer: fileBuffer
+    }
+  } catch (error) {
+    console.error('Failed to read dicom file:', error)
+    throw error
+  }
+})
+
+// 添加打开文件夹的IPC处理程序
+ipcMain.handle('open-folder', async (event, folderPath) => {
+  try {
+    if (!fs.existsSync(folderPath)) {
+      throw new Error('folder not exists')
+    }
+
+    // 使用shell打开文件夹
+    const result = await shell.openPath(folderPath)
+
+    // 如果返回非空字符串，表示有错误
+    if (result) {
+      throw new Error(result)
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('open-folder error:', error)
+    throw error
   }
 })

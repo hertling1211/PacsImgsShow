@@ -118,22 +118,32 @@ export default {
       }
     },
     async handleMenuClick(item) {
-      console.log(`点击了菜单项: ${item.name}`)
       // 在实际应用中，这里可以根据item.link进行路由跳转或其他操作
-      // 注意：由于使用CSS方案，这里不需要手动关闭菜单
       // 判断一下item.link是不是为#
       if (item.link === '#') {
-        // 点击打开文件
+        // 点击打开文件，当文件选择成功之后，打开图像查看页面
         if (item.label === 'open-file') {
           // 调用主进程的打开文件选择器方法
           const filePaths = await window.api.openFileDialog()
-          console.log('选择的文件路径:', filePaths)
+          if (filePaths.canceled) {
+            this.$message.error('未选择需要查看的影像文件')
+            return
+          }
+          this.$LoadImg.DCMFileLoad(filePaths.filePath)
+          // 打开图像查看页面
+          this.$router.push({ name: 'ShowImg' })
         }
-        // 点击打开文件夹
+        // 点击打开文件夹，当文件夹打开成功之后打开图像查看页面
         if (item.label === 'open-folder') {
           // 调用主进程的打开文件夹选择器方法
           const folderPaths = await window.api.openFolderDialog()
-          console.log('选择的文件夹路径:', folderPaths)
+          if (folderPaths.canceled) {
+            this.$message.error('未选择需要查看的影像文件组')
+            return
+          }
+          this.$LoadImg.DCMFileLoad(folderPaths.files)
+          // 打开图像查看页面
+          this.$router.push({ name: 'ShowImg' })
         }
         // handleMenuClick方法中添加判断
         if (item.label === 'exit') {
