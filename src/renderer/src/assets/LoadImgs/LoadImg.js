@@ -31,9 +31,11 @@ async function DCMFileLoad(file) {
     const arrayBuffer = dicomData.buffer
     // console.log('文件大小:', arrayBuffer.length)
 
-    // 不为空，调用DCMLoad函数
-    const seriesInfo = await DCMLoad(arrayBuffer, file)
-    console.log('seriesInfo:', seriesInfo)
+    // 不为空，调用DCMLoad函数解析文件
+    if (arrayBuffer.length > 0) {
+      const seriesInfo = await DCMLoad(arrayBuffer, file)
+      console.log('seriesInfo:', seriesInfo)
+    }
   } catch (error) {
     console.error('读取文件失败:', error)
   }
@@ -65,15 +67,26 @@ async function DCMLoad(arrayBuffer, fileName) {
     }
 
     const dataSet = dicomParser.parseDicom(byteArray)
-
+    // 序列ID
     const seriesInstanceUID = dataSet.string('x0020000e') || 'UnknownSeriesUID'
+    // 检查设备
     const modality = dataSet.string('x00080060') || 'Unknown'
+    // 患者ID
     const patientID = dataSet.string('x00100020') || 'UnknownPatientID'
+    // 序列描述
     let seriesDescription = dataSet.string('x0008103e') || ''
+    // 身体部位
     const bodyPartExamined = dataSet.string('x00180015') || 'UnknownBodyPart'
+    // 视图位置
     const viewPosition = dataSet.string('x00185101') || ''
+    // 序列编号
     const seriesNumber = dataSet.string('x00200011') || '0'
+    // 检查日期
     const studyDate = dataSet.string('x00080020') || 'UnknownDate'
+    // 医院名称
+    const institutionName = dataSet.string('x00080080') || 'UnknownInstitution'
+    // 患者姓名
+    const patientName = dataSet.string('x00100010') || 'UnknownPatientName'
 
     if (!seriesDescription) {
       seriesDescription = `${modality}-${bodyPartExamined}${viewPosition ? '-' + viewPosition : ''}`
@@ -90,7 +103,9 @@ async function DCMLoad(arrayBuffer, fileName) {
       seriesNumber,
       studyDate,
       patientID,
-      fileName
+      fileName,
+      institutionName,
+      patientName
     }
   } catch (error) {
     console.error('提取系列信息失败:', error)
@@ -101,6 +116,9 @@ async function DCMLoad(arrayBuffer, fileName) {
     }
   }
 }
+/**
+ * 
+ */
 // 使用ES模块导出方式
 export default {
   DCMFileLoad,

@@ -4,8 +4,10 @@
   <!-- 添加一个返回按钮，点击返回按钮后，返回上一页 -->
   <el-button type="primary" @click="handleBack">返回</el-button>
   <div>
-    <img v-if="imgPath" :src="imgPath" alt="PACS 图片" />
-    <div v-else>加载中...</div>
+    <!-- 展示this.$LoadImg.handleDicomContent(seriesInfo) -->
+    <div>{{ dicomContent }}</div>
+    <!-- <img v-if="imgPath" :src="imgPath" alt="PACS 图片" />
+    <div v-else>加载中...</div> -->
   </div>
 </template>
 <script>
@@ -16,15 +18,31 @@ export default {
       imgPath: null
     }
   },
-  mounted() {
-    // 挂载完成后，根据传递来的文件路径加载图片
-    // this.loadImg()
+  watch: {
+    // 实时获取this.$LoadImg.handleDicomContent(seriesInfo)的返回值
+    dicomContent: {
+      handler(newVal, oldVal) {
+        if (newVal !== oldVal) {
+          this.$LoadImg.handleDicomContent(newVal)
+        }
+      },
+      deep: true
+    }
   },
+  mounted() {},
   methods: {
     // 处理返回按钮点击事件
     handleBack() {
       // 返回首页
       this.$router.push('/')
+    },
+    // 处理Dicom内容
+    handleDicomContent(seriesInfo) {
+      console.log('seriesInfo:', seriesInfo)
+      if (seriesInfo && seriesInfo.length > 0) {
+        // 提取第一张图片的路径
+        this.imgPath = seriesInfo[0].imageId
+      }
     }
   }
 }
