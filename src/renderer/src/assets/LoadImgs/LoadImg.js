@@ -1,21 +1,21 @@
-/**
- * 解析DICOM文件
- */
-
-// 引入dicom-parser库
+// dicom_parse.js - 更新版本，添加像素数据解析
 import dicomParser from 'dicom-parser'
 
 /**
  * 解析DICOM文件
+ * @param {string|Array<string>} file 要解析的DICOM文件路径，支持数组批量解析
+ * @returns {Promise<object>} 解析后的系列信息对象，包含像素数据
  */
 async function DCMFileLoad(file) {
+  let seriesInfo = {}
   // 判断前端传递的是数组还是非数组
   if (Array.isArray(file)) {
-    file.forEach((filePath) => {
-      DCMFileLoad(filePath)
-    })
-    // 添加 return 语句，避免数组直接传递给 readFile
-    return
+    const results = []
+    for (const filePath of file) {
+      const result = await DCMFileLoad(filePath)
+      if (result) results.push(result)
+    }
+    return results
   }
   // 如果不是数组，直接解析文件
   try {
@@ -24,27 +24,29 @@ async function DCMFileLoad(file) {
     // 检查返回的数据结构
     if (!dicomData || !dicomData.buffer) {
       console.error('未获取到有效的文件数据')
-      return
+      return null
     }
 
     // 从返回的数据中提取buffer
     const arrayBuffer = dicomData.buffer
-    // console.log('文件大小:', arrayBuffer.length)
 
     // 不为空，调用DCMLoad函数解析文件
     if (arrayBuffer.length > 0) {
-      const seriesInfo = await DCMLoad(arrayBuffer, file)
-      console.log('seriesInfo:', seriesInfo)
+      seriesInfo = await DCMLoad(arrayBuffer, file)
+      console.log('解析成功:', seriesInfo.seriesDescription)
+      return seriesInfo
     }
   } catch (error) {
     console.error('读取文件失败:', error)
   }
+  return null
 }
+
 /**
- *
+ * 提取DICOM文件的系列信息和像素数据
  * @param {Uint8Array} arrayBuffer Dicom文件的二进制数据
  * @param {string} fileName Dicom文件的文件名
- * @returns {object} 包含系列信息的对象
+ * @returns {object} 包含系列信息和像素数据的对象
  */
 async function DCMLoad(arrayBuffer, fileName) {
   try {
@@ -67,26 +69,32 @@ async function DCMLoad(arrayBuffer, fileName) {
     }
 
     const dataSet = dicomParser.parseDicom(byteArray)
-    // 序列ID
+
+    // 基本信息提取
     const seriesInstanceUID = dataSet.string('x0020000e') || 'UnknownSeriesUID'
-    // 检查设备
     const modality = dataSet.string('x00080060') || 'Unknown'
-    // 患者ID
     const patientID = dataSet.string('x00100020') || 'UnknownPatientID'
-    // 序列描述
     let seriesDescription = dataSet.string('x0008103e') || ''
-    // 身体部位
     const bodyPartExamined = dataSet.string('x00180015') || 'UnknownBodyPart'
-    // 视图位置
     const viewPosition = dataSet.string('x00185101') || ''
-    // 序列编号
     const seriesNumber = dataSet.string('x00200011') || '0'
-    // 检查日期
     const studyDate = dataSet.string('x00080020') || 'UnknownDate'
-    // 医院名称
     const institutionName = dataSet.string('x00080080') || 'UnknownInstitution'
-    // 患者姓名
     const patientName = dataSet.string('x00100010') || 'UnknownPatientName'
+
+    // 图像参数提取
+    const rows = dataSet.uint16('x00280010') || 512 // 默认值512
+    const columns = dataSet.uint16('x00280011') || 512 // 默认值512
+    const bitsAllocated = dataSet.uint16('x00280100') || 8
+    const bitsStored = dataSet.uint16('x00280101') || bitsAllocated
+    const highBit = dataSet.uint16('x00280102') || bitsStored - 1
+    const pixelRepresentation = dataSet.uint16('x00280103') || 0 // 0: unsigned, 1: signed
+    const samplesPerPixel = dataSet.uint16('x00280002') || 1
+    const photometricInterpretation = dataSet.string('x00280004') || 'MONOCHROME2'
+    const windowCenter = dataSet.floatString('x00281050') || 1024
+    const windowWidth = dataSet.floatString('x00281051') || 2048
+    const rescaleIntercept = dataSet.floatString('x00281052') || 0
+    const rescaleSlope = dataSet.floatString('x00281053') || 1
 
     if (!seriesDescription) {
       seriesDescription = `${modality}-${bodyPartExamined}${viewPosition ? '-' + viewPosition : ''}`
@@ -94,7 +102,56 @@ async function DCMLoad(arrayBuffer, fileName) {
 
     const displayName = seriesDescription
 
+    // 提取像素数据
+    let pixelData = null
+    let minPixelValue = Infinity
+    let maxPixelValue = -Infinity
+
+    try {
+      // 获取像素数据元素
+      const pixelDataElement = dataSet.elements.x7fe00010
+      if (pixelDataElement) {
+        // 根据位深度创建不同的数组
+        if (bitsAllocated === 16) {
+          if (pixelRepresentation === 0) {
+            // 无符号16位
+            pixelData = new Uint16Array(
+              dataSet.byteArray.buffer,
+              pixelDataElement.dataOffset,
+              pixelDataElement.length / 2
+            )
+          } else {
+            // 有符号16位
+            pixelData = new Int16Array(
+              dataSet.byteArray.buffer,
+              pixelDataElement.dataOffset,
+              pixelDataElement.length / 2
+            )
+          }
+        } else if (bitsAllocated === 8) {
+          // 8位像素数据
+          pixelData = new Uint8Array(
+            dataSet.byteArray.buffer,
+            pixelDataElement.dataOffset,
+            pixelDataElement.length
+          )
+        }
+
+        // 计算像素值范围（可选，用于自动窗宽窗位）
+        if (pixelData) {
+          for (let i = 0; i < Math.min(pixelData.length, 10000); i++) {
+            const value = pixelData[i]
+            if (value < minPixelValue) minPixelValue = value
+            if (value > maxPixelValue) maxPixelValue = value
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('提取像素数据失败:', error)
+    }
+
     return {
+      // 元数据
       seriesDescription: displayName,
       seriesInstanceUID,
       modality,
@@ -105,7 +162,30 @@ async function DCMLoad(arrayBuffer, fileName) {
       patientID,
       fileName,
       institutionName,
-      patientName
+      patientName,
+
+      // 图像参数
+      rows,
+      columns,
+      bitsAllocated,
+      bitsStored,
+      highBit,
+      pixelRepresentation,
+      samplesPerPixel,
+      photometricInterpretation,
+      windowCenter: Array.isArray(windowCenter) ? windowCenter[0] : windowCenter,
+      windowWidth: Array.isArray(windowWidth) ? windowWidth[0] : windowWidth,
+      rescaleIntercept,
+      rescaleSlope,
+
+      // 像素数据
+      pixelData,
+      minPixelValue: minPixelValue === Infinity ? 0 : minPixelValue,
+      maxPixelValue: maxPixelValue === -Infinity ? 255 : maxPixelValue,
+
+      // 计算值
+      aspectRatio: columns / rows,
+      totalPixels: rows * columns
     }
   } catch (error) {
     console.error('提取系列信息失败:', error)
@@ -116,11 +196,68 @@ async function DCMLoad(arrayBuffer, fileName) {
     }
   }
 }
+
 /**
- * 
+ * 加载并分类DICOM文件
+ * @param {Array<string>} dicomFiles DICOM文件路径数组
+ * @param {string} directoryPath 目录路径
+ * @returns {Promise<Array>} 分类后的系列列表
  */
+async function loadAndClassifyDicomFiles(dicomFiles, directoryPath) {
+  const seriesMap = new Map()
+
+  for (const file of dicomFiles) {
+    try {
+      const filePath = directoryPath + '/' + file
+      console.log(`正在解析文件: ${file}`)
+
+      const dicomData = await window.api.readFile(filePath)
+
+      if (dicomData && dicomData.buffer) {
+        const seriesInfo = await DCMLoad(dicomData.buffer, file)
+
+        const seriesKey = seriesInfo.seriesInstanceUID
+
+        if (!seriesMap.has(seriesKey)) {
+          seriesMap.set(seriesKey, {
+            name: seriesInfo.seriesDescription,
+            key: seriesKey,
+            modality: seriesInfo.modality,
+            bodyPart: seriesInfo.bodyPartExamined,
+            images: []
+          })
+        }
+
+        seriesMap.get(seriesKey).images.push({
+          file,
+          filePath,
+          seriesInfo
+        })
+
+        console.log(`文件 ${file} 分配到系列: ${seriesInfo.seriesDescription}`)
+      }
+    } catch (error) {
+      console.warn(`解析文件 ${file} 失败:`, error)
+    }
+  }
+
+  const seriesList = Array.from(seriesMap.values()).sort((a, b) => {
+    if (a.modality !== b.modality) {
+      return a.modality.localeCompare(b.modality)
+    }
+    if (a.bodyPart !== b.bodyPart) {
+      return a.bodyPart.localeCompare(b.bodyPart)
+    }
+    return a.name.localeCompare(b.name)
+  })
+
+  console.log('系列分类完成:', seriesList)
+  return seriesList
+}
+
 // 使用ES模块导出方式
 export default {
   DCMFileLoad,
-  DCMLoad
+  DCMLoad,
+  loadAndClassifyDicomFiles
 }

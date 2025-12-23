@@ -16,9 +16,6 @@
 
 ## 技术栈
 - 前端：Vue3 + ElementPlus
-- 后端：Node.js + Express (暂时不做)
-- 数据库：SQL Server数据库(暂时不做)
-- 认证：JWT（JSON Web Token）(暂时不做)
 
 ## 项目构件
 

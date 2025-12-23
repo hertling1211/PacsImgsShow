@@ -104,7 +104,31 @@ export default {
       ]
     }
   },
+
+  mounted() {
+    // 应用启动时清理过期的session数据
+    this.cleanupExpiredSessions()
+  },
+
   methods: {
+    // 清理过期的session数据
+    cleanupExpiredSessions() {
+      const now = Date.now()
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && key.endsWith('_expiry')) {
+          const expiry = localStorage.getItem(key)
+          if (expiry && now > parseInt(expiry)) {
+            // 清理过期的session数据
+            const sessionId = key.replace('_expiry', '')
+            localStorage.removeItem(sessionId)
+            localStorage.removeItem(key)
+            console.log('清理过期session:', sessionId)
+          }
+        }
+      }
+    },
+
     handleWindowOperation(operation) {
       console.log('用户点击了操作按钮:', operation)
       if (operation === 'minimize') {
@@ -129,29 +153,47 @@ export default {
             this.$message.error('未选择需要查看的影像文件')
             return
           }
-          this.$LoadImg.DCMFileLoad(filePaths.filePath)
-          // 打开图像查看页面
-          this.$router.push({ name: 'ShowImg' })
+          // 通过query参数传递文件路径到ShowImg页面
+          this.$router.push({
+            name: 'ShowImg',
+            query: {
+              filePath: filePaths.filePath,
+              type: 'file'
+            }
+          })
         }
         // 点击打开文件夹，当文件夹打开成功之后打开图像查看页面
-        if (item.label === 'open-folder') {
+        else if (item.label === 'open-folder') {
           // 调用主进程的打开文件夹选择器方法
           const folderPaths = await window.api.openFolderDialog()
           if (folderPaths.canceled) {
             this.$message.error('未选择需要查看的影像文件组')
             return
           }
-          this.$LoadImg.DCMFileLoad(folderPaths.files)
-          // 打开图像查看页面
-          this.$router.push({ name: 'ShowImg' })
+
+          // 使用本地存储保存文件路径，避免URL过长
+          const sessionId = 'folder_' + Date.now()
+          localStorage.setItem(sessionId, JSON.stringify(folderPaths.files))
+
+          // 设置过期时间（1小时后自动清理）
+          localStorage.setItem(sessionId + '_expiry', (Date.now() + 3600000).toString())
+
+          // 只传递sessionId，不传递完整的文件路径
+          this.$router.push({
+            name: 'ShowImg',
+            query: {
+              sessionId: sessionId,
+              type: 'folder'
+            }
+          })
         }
-        // handleMenuClick方法中添加判断
-        if (item.label === 'exit') {
+        // 点击退出
+        else if (item.label === 'exit') {
           // 调用主进程的关闭窗口方法
           window.api.quitApp()
         }
         // 点击官网
-        if (item.label === 'official-website') {
+        else if (item.label === 'official-website') {
           // 调用主进程的打开官网方法
           // window.api.openOfficialWebsite()
           // 目前先使用element的alert弹窗提示官网正在制作中 确认按钮居中显示
@@ -162,7 +204,7 @@ export default {
           })
         }
         // 点击检查更新
-        if (item.label === 'check-update') {
+        else if (item.label === 'check-update') {
           // 调用主进程的检查更新方法 获取github上面最新的relaese版本
           // window.api.checkUpdate()
           const checkUpdateResult = await window.api.checkUpdate()
@@ -198,7 +240,7 @@ export default {
           }
         }
         // 点击关于
-        if (item.label === 'about') {
+        else if (item.label === 'about') {
           // 调用主进程的打开关于方法
           // window.api.openAbout()
         }

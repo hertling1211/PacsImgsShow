@@ -23,7 +23,8 @@ const routes = [
   {
     path: '/showImg',
     name: 'ShowImg',
-    component: () => import('../views/ShowImg.vue')
+    component: () => import('../views/ShowImg.vue'),
+    props: true // 允许传递参数到组件
   },
   {
     path: '/:pathMatch(.*)*',
