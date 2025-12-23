@@ -103,10 +103,10 @@
           <!-- 主 Canvas 元素，用于渲染 DICOM 图像 -->
           <canvas
             ref="dicomCanvas"
-            @mousemove="handleMouseMove"      <!-- 鼠标移动事件：显示像素信息 -->
-            @mouseleave="clearPixelInfo"     <!-- 鼠标离开事件：清空像素信息 -->
-            @wheel="handleWheel"             <!-- 滚轮事件：缩放/切换图像 -->
-            @click="handleClick"             <!-- 点击事件：预留用于测量等功能 -->
+            @mousemove="handleMouseMove"
+            @mouseleave="clearPixelInfo"
+            @wheel="handleWheel"
+            @click="handleClick"
           >
           </canvas>
 
@@ -139,26 +139,26 @@
 
 <script>
 export default {
-  name: 'ShowImg',  // 组件名称
+  name: 'ShowImg', // 组件名称
 
   // 数据定义
   data() {
     return {
       // 状态数据
-      loading: false,      // 加载状态
-      error: null,         // 错误信息
-      renderer: null,      // DICOM 渲染器实例
-      imageInfo: null,     // 当前图像信息
-      pixelInfo: null,     // 鼠标悬停像素信息
-      seriesData: [],      // 系列数据数组（多图系列）
+      loading: false, // 加载状态
+      error: null, // 错误信息
+      renderer: null, // DICOM 渲染器实例
+      imageInfo: null, // 当前图像信息
+      pixelInfo: null, // 鼠标悬停像素信息
+      seriesData: [], // 系列数据数组（多图系列）
       currentImageIndex: 0, // 当前显示图像的索引
 
       // 图像处理参数
-      windowWidth: 2048,   // 窗宽（用于调节图像对比度）
-      windowCenter: 1024,  // 窗位（用于调节图像亮度）
-      invert: false,       // 是否反色
-      interpolation: true,  // 是否启用插值（平滑显示）
-      zoomPercent: 100,    // 当前缩放百分比
+      windowWidth: 2048, // 窗宽（用于调节图像对比度）
+      windowCenter: 1024, // 窗位（用于调节图像亮度）
+      invert: false, // 是否反色
+      interpolation: true, // 是否启用插值（平滑显示）
+      zoomPercent: 100, // 当前缩放百分比
 
       // 参数范围限制（防止用户输入极端值）
       minWindowWidth: 10,
@@ -193,8 +193,8 @@ export default {
     // 获取 Canvas 相关的 DOM 元素引用
     getCanvasElements() {
       return {
-        dicomCanvas: this.$refs.dicomCanvas,      // DICOM 图像的 Canvas 元素
-        canvasWrapper: this.$refs.canvasWrapper   // Canvas 包装容器
+        dicomCanvas: this.$refs.dicomCanvas, // DICOM 图像的 Canvas 元素
+        canvasWrapper: this.$refs.canvasWrapper // Canvas 包装容器
       }
     },
 
@@ -209,7 +209,7 @@ export default {
           // 调用全局的 DCM 文件加载方法
           const data = await this.$LoadImg.DCMFileLoad(filePath)
           return data ? [data] : null
-        } 
+        }
         // 处理文件夹（使用 session 存储）
         else if (type === 'folder' && sessionId) {
           try {
@@ -242,7 +242,7 @@ export default {
             localStorage.removeItem(sessionId + '_expiry')
             return null
           }
-        } 
+        }
         // 兼容旧版本：直接使用 filePaths 参数
         else if (type === 'folder' && filePaths) {
           try {
@@ -348,10 +348,10 @@ export default {
         // 创建新的渲染器实例
         // 假设 this.$DICOMRenderer 是全局注册的 DICOM 渲染器类
         this.renderer = new this.$DICOMRenderer(
-          dicomCanvas,        // Canvas 元素
-          dicomData,          // DICOM 数据
-          containerWidth,     // 容器宽度
-          containerHeight,    // 容器高度
+          dicomCanvas, // Canvas 元素
+          dicomData, // DICOM 数据
+          containerWidth, // 容器宽度
+          containerHeight, // 容器高度
           {
             // 渲染配置参数
             windowWidth: this.windowWidth,
@@ -429,9 +429,9 @@ export default {
         this.pixelInfo = {
           x: imageX,
           y: imageY,
-          value: pixelValue,                    // 原始像素值
+          value: pixelValue, // 原始像素值
           displayValue: Math.round(displayValue), // 显示像素值
-          huValue: Math.round(huValue)          // HU 值
+          huValue: Math.round(huValue) // HU 值
         }
       }
     },
@@ -451,7 +451,7 @@ export default {
       // 检查是否按下 Ctrl 键
       if (event.ctrlKey) {
         // Ctrl + 滚轮：缩放图像
-        const delta = event.deltaY > 0 ? -0.1 : 0.1  // 滚轮向下缩小，向上放大
+        const delta = event.deltaY > 0 ? -0.1 : 0.1 // 滚轮向下缩小，向上放大
         let newScale = this.renderer.scaleFactor + delta
         // 限制缩放范围（10% - 1000%）
         newScale = Math.max(0.1, Math.min(10, newScale))
@@ -470,7 +470,7 @@ export default {
       } else {
         // 普通滚轮：切换图像（仅当有多张图像时）
         if (this.seriesData.length > 1) {
-          const delta = event.deltaY > 0 ? 1 : -1  // 滚轮向下下一张，向上上一张
+          const delta = event.deltaY > 0 ? 1 : -1 // 滚轮向下下一张，向上上一张
           let newIndex = this.currentImageIndex + delta
 
           // 循环切换：到达末尾时回到开头，到达开头时跳到末尾
@@ -510,7 +510,7 @@ export default {
     // 缩小图像
     zoomOut() {
       if (!this.renderer) return
-      
+
       // 缩小到原来的 1/1.2
       let newScale = this.renderer.scaleFactor / 1.2
       // 限制最小缩放为 10%
@@ -535,7 +535,7 @@ export default {
       // 获取容器元素
       const { canvasWrapper } = this.getCanvasElements()
       if (!canvasWrapper) return
-      
+
       // 获取容器尺寸
       const containerWidth = canvasWrapper.clientWidth
       const containerHeight = canvasWrapper.clientHeight
@@ -649,7 +649,7 @@ export default {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #1a1a1a;  /* 深灰背景 */
+  background-color: #1a1a1a; /* 深灰背景 */
   color: #fff;
 }
 
@@ -658,8 +658,8 @@ export default {
   display: flex;
   align-items: center;
   padding: 10px 20px;
-  background-color: #2d2d2d;  /* 稍亮的深灰 */
-  border-bottom: 1px solid #444;  /* 分割线 */
+  background-color: #2d2d2d; /* 稍亮的深灰 */
+  border-bottom: 1px solid #444; /* 分割线 */
 }
 
 /* 图像信息显示样式 */
@@ -668,22 +668,22 @@ export default {
   display: flex;
   gap: 20px;
   font-size: 14px;
-  color: #aaa;  /* 浅灰色文字 */
-  flex-wrap: wrap;  /* 允许换行 */
+  color: #aaa; /* 浅灰色文字 */
+  flex-wrap: wrap; /* 允许换行 */
 }
 
 /* 信息标签样式 */
 .viewer-info span {
   padding: 4px 8px;
-  background-color: #3a3a3a;  /* 标签背景 */
+  background-color: #3a3a3a; /* 标签背景 */
   border-radius: 4px;
 }
 
 /* 主内容区域 */
 .main-content {
-  flex: 1;  /* 占据剩余空间 */
+  flex: 1; /* 占据剩余空间 */
   display: flex;
-  overflow: hidden;  /* 防止内容溢出 */
+  overflow: hidden; /* 防止内容溢出 */
 }
 
 /* 左侧控制面板 */
@@ -691,28 +691,28 @@ export default {
   width: 300px;
   padding: 20px;
   background-color: #2d2d2d;
-  border-right: 1px solid #444;  /* 右侧分割线 */
-  overflow-y: auto;  /* 垂直滚动 */
+  border-right: 1px solid #444; /* 右侧分割线 */
+  overflow-y: auto; /* 垂直滚动 */
   display: flex;
   flex-direction: column;
-  gap: 20px;  /* 子元素间距 */
+  gap: 20px; /* 子元素间距 */
 }
 
 /* 系列列表容器 */
 .series-list-container {
-  flex-shrink: 0;  /* 防止压缩 */
+  flex-shrink: 0; /* 防止压缩 */
 }
 
 /* 系列列表卡片 */
 .series-list-card {
   background-color: #3a3a3a;
-  border: none;  /* 移除默认边框 */
+  border: none; /* 移除默认边框 */
 }
 
 /* 系列列表 */
 .series-list {
   max-height: 400px;
-  overflow-y: auto;  /* 内容过多时滚动 */
+  overflow-y: auto; /* 内容过多时滚动 */
 }
 
 /* 系列列表项 */
@@ -724,24 +724,24 @@ export default {
   background-color: #2d2d2d;
   border: 1px solid #444;
   border-radius: 8px;
-  cursor: pointer;  /* 鼠标手型 */
-  transition: all 0.3s ease;  /* 平滑过渡效果 */
-  position: relative;  /* 用于绝对定位角标 */
+  cursor: pointer; /* 鼠标手型 */
+  transition: all 0.3s ease; /* 平滑过渡效果 */
+  position: relative; /* 用于绝对定位角标 */
 }
 
 /* 悬停效果 */
 .series-list-item:hover {
   background-color: #3a3a3a;
-  border-color: #409eff;  /* Element UI 主色 */
-  transform: translateY(-2px);  /* 轻微上浮 */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);  /* 阴影效果 */
+  border-color: #409eff; /* Element UI 主色 */
+  transform: translateY(-2px); /* 轻微上浮 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* 阴影效果 */
 }
 
 /* 选中状态 */
 .series-list-item.active {
-  background-color: #2a3a4a;  /* 深蓝色背景 */
+  background-color: #2a3a4a; /* 深蓝色背景 */
   border-color: #409eff;
-  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);  /* 蓝色阴影 */
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3); /* 蓝色阴影 */
 }
 
 /* 系列图标 */
@@ -751,10 +751,10 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #409eff, #67c23a);  /* 渐变背景 */
+  background: linear-gradient(135deg, #409eff, #67c23a); /* 渐变背景 */
   border-radius: 6px;
   margin-right: 12px;
-  flex-shrink: 0;  /* 防止压缩 */
+  flex-shrink: 0; /* 防止压缩 */
 }
 
 /* 图标文字 */
@@ -765,8 +765,8 @@ export default {
 
 /* 系列信息区域 */
 .series-info {
-  flex: 1;  /* 占据剩余空间 */
-  min-width: 0;  /* 防止内容溢出 */
+  flex: 1; /* 占据剩余空间 */
+  min-width: 0; /* 防止内容溢出 */
 }
 
 /* 系列名称 */
@@ -781,9 +781,9 @@ export default {
 .series-desc {
   font-size: 12px;
   color: #aaa;
-  white-space: nowrap;  /* 不换行 */
-  overflow: hidden;  /* 隐藏溢出内容 */
-  text-overflow: ellipsis;  /* 显示省略号 */
+  white-space: nowrap; /* 不换行 */
+  overflow: hidden; /* 隐藏溢出内容 */
+  text-overflow: ellipsis; /* 显示省略号 */
 }
 
 /* 序号角标 */
@@ -791,7 +791,7 @@ export default {
   position: absolute;
   top: -5px;
   right: -5px;
-  background: #e6a23c;  /* 橙色背景 */
+  background: #e6a23c; /* 橙色背景 */
   color: white;
   border-radius: 10px;
   padding: 2px 6px;
@@ -817,7 +817,7 @@ export default {
 .pixel-info div {
   margin-bottom: 8px;
   padding: 4px 0;
-  border-bottom: 1px solid #444;  /* 行分隔线 */
+  border-bottom: 1px solid #444; /* 行分隔线 */
 }
 
 /* 操作卡片 */
@@ -830,7 +830,7 @@ export default {
 .action-buttons {
   display: flex;
   flex-direction: column;
-  gap: 10px;  /* 按钮间距 */
+  gap: 10px; /* 按钮间距 */
 }
 
 /* 左对齐按钮 */
@@ -847,7 +847,7 @@ export default {
 
 /* 图像显示区域 */
 .image-container {
-  flex: 1;  /* 占据剩余空间 */
+  flex: 1; /* 占据剩余空间 */
   display: flex;
   flex-direction: column;
   padding: 20px;
@@ -856,29 +856,29 @@ export default {
 
 /* Canvas 包装容器 */
 .canvas-wrapper {
-  flex: 1;  /* 占据主要空间 */
+  flex: 1; /* 占据主要空间 */
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #000;  /* 黑色背景，适合医学图像 */
+  background-color: #000; /* 黑色背景，适合医学图像 */
   border: 1px solid #444;
   border-radius: 4px;
   position: relative;
-  overflow: auto;  /* 图片过大时可滚动 */
+  overflow: auto; /* 图片过大时可滚动 */
 }
 
 /* Canvas 元素样式 */
 canvas {
-  display: block;  /* 消除行内元素间隙 */
-  max-width: 100%;  /* 响应式宽度 */
-  max-height: 100%;  /* 响应式高度 */
-  cursor: crosshair;  /* 十字光标，适合图像测量 */
+  display: block; /* 消除行内元素间隙 */
+  max-width: 100%; /* 响应式宽度 */
+  max-height: 100%; /* 响应式高度 */
+  cursor: crosshair; /* 十字光标，适合图像测量 */
 }
 
 /* 加载和错误遮罩层 */
 .loading-overlay,
 .error-overlay {
-  position: absolute;  /* 覆盖在 Canvas 上 */
+  position: absolute; /* 覆盖在 Canvas 上 */
   top: 0;
   left: 0;
   right: 0;
@@ -887,7 +887,7 @@ canvas {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.8);  /* 半透明黑色背景 */
+  background-color: rgba(0, 0, 0, 0.8); /* 半透明黑色背景 */
   color: #fff;
 }
 
