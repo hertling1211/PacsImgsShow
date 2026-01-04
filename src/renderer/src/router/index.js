@@ -27,6 +27,11 @@ const routes = [
     props: true // 允许传递参数到组件
   },
   {
+    path: '/imgPage',
+    name: 'ImgPage',
+    component: () => import('../views/ImgPage.vue')
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('../views/NotFound.vue')
