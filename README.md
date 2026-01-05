@@ -118,7 +118,7 @@ const addRectangleAnnotation = (imageId, position) => {
 
 ## 许可证
 
-本项目采用MIT 3.0 许可证，详细信息请查看LICENSE文件。
+本项目采用GPL-3.0 许可证，详细信息请查看LICENSE文件。
 
 ## 注意事项
 
