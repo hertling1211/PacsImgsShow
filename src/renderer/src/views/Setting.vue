@@ -1,3 +1,4 @@
+<!-- 设置项读取Setting.json项 -->
 <template>
   <div class="setting-container">
     <div class="setting-content">

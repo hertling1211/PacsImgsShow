@@ -98,67 +98,7 @@ export default {
       // 搜索文本
       searchText: '',
       // 原始患者列表数据
-      allPatients: [
-        {
-          PatientName: '张三',
-          PatientID: '123456',
-          body: 'brain',
-          imageType: 'CT',
-          ReceiveDate: '2023-08-15',
-          // 患者文件夹路径
-          patientFolderPath: 'D:/DCMTemp/V251743'
-        },
-        {
-          PatientName: '李四',
-          PatientID: '654321',
-          body: 'brain',
-          imageType: 'MR',
-          ReceiveDate: '2023-08-15',
-          // 患者文件夹路径
-          patientFolderPath:
-            'C:/Users/Administrator/Desktop/ServiceApp/PacsImgsShow/src/renderer/src/assets/Patients/654321'
-        },
-        {
-          PatientName: '王五',
-          PatientID: '789012',
-          body: 'chest',
-          imageType: 'CBCT',
-          ReceiveDate: '2023-08-16',
-          // 患者文件夹路径
-          patientFolderPath:
-            'C:/Users/Administrator/Desktop/ServiceApp/PacsImgsShow/src/renderer/src/assets/Patients/789012'
-        },
-        {
-          PatientName: '赵六',
-          PatientID: '345678',
-          body: 'abdomen',
-          imageType: 'CT',
-          ReceiveDate: '2023-08-17',
-          // 患者文件夹路径
-          patientFolderPath:
-            'C:/Users/Administrator/Desktop/ServiceApp/PacsImgsShow/src/renderer/src/assets/Patients/345678'
-        },
-        {
-          PatientName: '孙七',
-          PatientID: '901234',
-          body: 'bone',
-          imageType: 'MR',
-          ReceiveDate: '2023-08-18',
-          // 患者文件夹路径
-          patientFolderPath:
-            'C:/Users/Administrator/Desktop/ServiceApp/PacsImgsShow/src/renderer/src/assets/Patients/901234'
-        },
-        {
-          PatientName: '肖八',
-          PatientID: '901204',
-          body: 'bone',
-          imageType: 'MR',
-          ReceiveDate: '2025-08-18',
-          // 患者文件夹路径
-          patientFolderPath:
-            'C:/Users/Administrator/Desktop/ServiceApp/PacsImgsShow/src/renderer/src/assets/Patients/901204'
-        }
-      ]
+      allPatients: []
     }
   },
   computed: {
@@ -177,7 +117,59 @@ export default {
       )
     }
   },
+  mounted() {
+    this.getPatientList()
+  },
   methods: {
+    getPatientList() {
+      // 添加安全检查，确保 window.api 存在
+      if (!window.api) {
+        console.error('window.api 未定义，请检查预加载脚本是否正确加载')
+        this.$message.error('应用API未正确初始化，请重新启动应用')
+        this.allPatients = []
+        return
+      }
+
+      if (typeof window.api.readPatientList !== 'function') {
+        console.error('window.api.readPatientList 方法不存在或不是函数')
+        this.$message.error('患者列表功能不可用，请检查应用配置')
+        this.allPatients = []
+        return
+      }
+
+      window.api
+        .readPatientList()
+        .then((response) => {
+          if (response.success) {
+            // 提取patientList数据
+            let patientList = []
+            if (Array.isArray(response.data) && response.data.length > 0) {
+              // 如果返回的是数组，提取第一个元素的patientList
+              patientList = response.data[0].patientList || []
+            } else if (response.data && response.data.patientList) {
+              // 如果返回的是对象，直接提取patientList
+              patientList = response.data.patientList
+            }
+
+            // 设置患者列表数据
+            this.allPatients = patientList
+
+            if (response.message) {
+              console.log(response.message)
+            }
+            console.log('成功获取患者列表:', patientList)
+          } else {
+            console.error('读取患者列表失败:', response.error)
+            this.$message.error(response.message || '获取患者列表失败')
+            this.allPatients = []
+          }
+        })
+        .catch((error) => {
+          console.error('获取患者列表失败:', error)
+          this.$message.error('获取患者列表失败: ' + error.message)
+          this.allPatients = []
+        })
+    },
     backHome() {
       this.$router.push({ name: 'Home' })
     },

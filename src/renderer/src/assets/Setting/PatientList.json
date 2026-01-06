@@ -1,0 +1,58 @@
+{
+  "PatientImgFloderPath": "D:/DCMTemp",
+  "patientList": [
+        {
+          "PatientName": "张三",
+          "PatientID": "123456",
+          "body": "brain",
+          "imageType": "CT",
+          "ReceiveDate": "2023-08-15",
+          "patientFolderPath": "D:/DCMTemp/V251743"
+        },
+        {
+          "PatientName": "李四",
+          "PatientID": "654321",
+          "body": "brain",
+          "imageType": "MR",
+          "ReceiveDate": "2023-08-15",
+          "patientFolderPath":
+            "C:/Users/Administrator/Desktop/ServiceApp/PacsImgsShow/src/renderer/src/assets/Patients/654321"
+        },
+        {
+          "PatientName": "王五",
+          "PatientID": "789012",
+          "body": "chest",
+          "imageType": "CBCT",
+          "ReceiveDate": "2023-08-16",
+          "patientFolderPath":
+            "C:/Users/Administrator/Desktop/ServiceApp/PacsImgsShow/src/renderer/src/assets/Patients/789012"
+        },
+        {
+          "PatientName": "赵六",
+          "PatientID": "345678",
+          "body": "abdomen",
+          "imageType": "CT",
+          "ReceiveDate": "2023-08-17",
+          "patientFolderPath":
+            "C:/Users/Administrator/Desktop/ServiceApp/PacsImgsShow/src/renderer/src/assets/Patients/345678"
+        },
+        {
+          "PatientName": "孙七",
+          "PatientID": "901234",
+          "body": "bone",
+          "imageType": "MR",
+          "ReceiveDate": "2023-08-18",
+          "patientFolderPath":
+            "C:/Users/Administrator/Desktop/ServiceApp/PacsImgsShow/src/renderer/src/assets/Patients/901234"
+        },
+        {
+          "PatientName": "肖八",
+          "PatientID": "901204",
+          "body": "bone",
+          "imageType": "MR",
+          "ReceiveDate": "2025-08-18",
+          "patientFolderPath":
+            "C:/Users/Administrator/Desktop/ServiceApp/PacsImgsShow/src/renderer/src/assets/Patients/901204"
+        }
+    ]
+}

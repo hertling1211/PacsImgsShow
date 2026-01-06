@@ -17,7 +17,10 @@ const api = {
   // 添加打开文件夹
   openFolder: (folderPath) => ipcRenderer.invoke('open-folder', folderPath),
   // 读取文件
-  readFile: (filePath) => ipcRenderer.invoke('read-dicom-file', filePath)
+  readFile: (filePath) => ipcRenderer.invoke('read-dicom-file', filePath),
+  // 操作PatientList.json文件 包含读取以及写入
+  readPatientList: () => ipcRenderer.invoke('read-patient-list'),
+  writePatientList: (patientList) => ipcRenderer.invoke('write-patient-list', patientList)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

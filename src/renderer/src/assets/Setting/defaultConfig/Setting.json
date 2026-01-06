@@ -1,0 +1,48 @@
+{
+  "Common": {
+    "Language": [
+      {
+        "Value": "zh-CN",
+        "Text": "中文",
+        "Selected": true
+      },
+      {
+        "Value": "en-US",
+        "Text": "英文",
+        "Selected": false
+      }
+    ],
+    "ExitTime": 5,
+    "Font": {
+      "Family": "微软雅黑",
+      "Size": 12
+    }
+  },
+  "UserInterface": {
+    "Theme": "Light",
+    "MainWindow": {
+      "Width": 1200,
+      "Height": 800,
+      "IsMaximized": false
+    },
+    "ShowToolbar": true,
+    "ShowStatusBar": true
+  },
+  "Behavior": {
+    "ConfirmBeforeExit": true,
+    "ConfirmBeforeDelete": true,
+    "MaxUndoSteps": 50,
+    "RecentFilesMaxCount": 10
+  },
+  "Files": {
+    "DefaultSavePath": "",
+    "AutoSave": {
+      "Enabled": true,
+      "IntervalInMinutes": 5
+    }
+  },
+  "Notifications": {
+    "EnableSound": true,
+    "CheckForUpdates": true
+  }
+}

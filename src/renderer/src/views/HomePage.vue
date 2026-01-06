@@ -10,16 +10,16 @@
       <div class="welcome-text">
         <h1 class="app-title">PacsImgShow</h1>
         <p class="welcome-message">{{ message }}</p>
-        <p class="subtitle">专业医学影像查看与管理系统</p>
+        <p class="subtitle">医学影像查看与管理系统</p>
       </div>
 
-      <!-- 功能按钮区 -->
-      <div class="action-buttons">
+      <!-- 功能按钮区暂时下线，后续再考虑放置具体功能 -->
+      <!-- <div class="action-buttons">
         <el-button type="primary" size="large" class="action-btn" @click="handleStartUsing"
           >开始使用</el-button
         >
         <el-button size="large" class="action-btn">选择影像</el-button>
-      </div>
+      </div> -->
     </div>
 
     <!-- 装饰性元素 - 增强动画效果 -->

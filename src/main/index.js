@@ -479,3 +479,177 @@ ipcMain.handle('open-folder', async (event, folderPath) => {
     throw error
   }
 })
+// 读取PatientList.json文件
+ipcMain.handle('read-patient-list', async () => {
+  try {
+    const userDataPath = app.getPath('userData')
+    console.log('userDataPath:', userDataPath)
+    const pacsImgPath = path.join(userDataPath, 'PacsImg')
+    const patientImgFloderPath = path.join(pacsImgPath, 'PatientImgFloderPath')
+    const patientListPath = path.join(patientImgFloderPath, 'PatientList.json')
+
+    // 检查PacsImg文件夹是否存在，如果不存在则创建
+    if (
+      !(await fs.promises
+        .access(pacsImgPath)
+        .then(() => true)
+        .catch(() => false))
+    ) {
+      await fs.promises.mkdir(pacsImgPath, { recursive: true })
+      // 创建成功之后，创建PatientImgFloderPath文件夹以及在此文件夹下创建PatientList.json文件并返回一个空数组
+      await fs.promises.mkdir(patientImgFloderPath, { recursive: true })
+
+      // 创建空的PatientList.json文件
+      const emptyPatientList = []
+      await fs.promises.writeFile(
+        patientListPath,
+        JSON.stringify(emptyPatientList, null, 2),
+        'utf8'
+      )
+
+      console.log('created new PatientImgFloderPath folder and PatientList.json file')
+      return {
+        success: true,
+        data: emptyPatientList,
+        message: 'Successfully created new patient list file'
+      }
+    }
+
+    // 检查PatientImgFloderPath文件夹是否存在，如果不存在则创建
+    if (
+      !(await fs.promises
+        .access(patientImgFloderPath)
+        .then(() => true)
+        .catch(() => false))
+    ) {
+      await fs.promises.mkdir(patientImgFloderPath, { recursive: true })
+
+      // 检查PatientList.json文件是否存在，如果不存在则创建
+      if (
+        !(await fs.promises
+          .access(patientListPath)
+          .then(() => true)
+          .catch(() => false))
+      ) {
+        const emptyPatientList = []
+        await fs.promises.writeFile(
+          patientListPath,
+          JSON.stringify(emptyPatientList, null, 2),
+          'utf8'
+        )
+        console.log('created new PatientList.json file')
+        return {
+          success: true,
+          data: emptyPatientList,
+          message: 'Successfully created new patient list file'
+        }
+      }
+    }
+
+    // 检查PatientList.json文件是否存在，如果不存在则创建
+    if (
+      !(await fs.promises
+        .access(patientListPath)
+        .then(() => true)
+        .catch(() => false))
+    ) {
+      const emptyPatientList = []
+      await fs.promises.writeFile(
+        patientListPath,
+        JSON.stringify(emptyPatientList, null, 2),
+        'utf8'
+      )
+      console.log('created new PatientList.json file')
+      return {
+        success: true,
+        data: emptyPatientList,
+        message: 'Successfully created new patient list file'
+      }
+    }
+
+    // 文件存在，读取并返回数据
+    const data = await fs.promises.readFile(patientListPath, 'utf8')
+    const patientList = JSON.parse(data)
+    return { success: true, data: patientList, message: 'Successfully read patient list' }
+  } catch (error) {
+    console.error('read-patient-list error:', error)
+    // 返回错误信息而不是空数组
+    return {
+      success: false,
+      data: [],
+      error: error.message,
+      message: `Failed to read patient list: ${error.message}`
+    }
+  }
+})
+
+// 写入PatientList.json文件（在原有基础上添加内容）
+ipcMain.handle('write-patient-list', async (event, patientListJson) => {
+  try {
+    const userDataPath = app.getPath('userData')
+    const pacsImgPath = path.join(userDataPath, 'PacsImg')
+    const patientImgFloderPath = path.join(pacsImgPath, 'PatientImgFloderPath')
+    const patientListPath = path.join(patientImgFloderPath, 'PatientList.json')
+
+    // 检查PacsImg文件夹是否存在，如果不存在则创建
+    if (
+      !(await fs.promises
+        .access(pacsImgPath)
+        .then(() => true)
+        .catch(() => false))
+    ) {
+      await fs.promises.mkdir(pacsImgPath, { recursive: true })
+    }
+
+    // 检查PatientImgFloderPath文件夹是否存在，如果不存在则创建
+    if (
+      !(await fs.promises
+        .access(patientImgFloderPath)
+        .then(() => true)
+        .catch(() => false))
+    ) {
+      await fs.promises.mkdir(patientImgFloderPath, { recursive: true })
+    }
+
+    let existingPatientList = []
+    let isNewFile = true
+
+    // 检查文件是否存在
+    if (
+      await fs.promises
+        .access(patientListPath)
+        .then(() => true)
+        .catch(() => false)
+    ) {
+      // 读取现有内容
+      const existingData = await fs.promises.readFile(patientListPath, 'utf8')
+      existingPatientList = JSON.parse(existingData)
+      isNewFile = false
+    }
+
+    // 解析新的JSON数据（用户提到是已经打包好的JSON格式）
+    const newPatientData = JSON.parse(patientListJson)
+
+    // 合并数据
+    let updatedPatientList
+    if (Array.isArray(newPatientData)) {
+      // 如果新数据是数组，合并到现有数组
+      updatedPatientList = [...existingPatientList, ...newPatientData]
+    } else {
+      // 如果新数据是单个对象，添加到现有数组
+      updatedPatientList = [...existingPatientList, newPatientData]
+    }
+
+    // 写入更新后的数据
+    await fs.promises.writeFile(
+      patientListPath,
+      JSON.stringify(updatedPatientList, null, 2),
+      'utf8'
+    )
+
+    return { success: true, isNewFile }
+  } catch (error) {
+    console.error('write-patient-list error:', error)
+    throw error
+  }
+})
