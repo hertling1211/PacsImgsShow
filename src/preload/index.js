@@ -20,7 +20,10 @@ const api = {
   readFile: (filePath) => ipcRenderer.invoke('read-dicom-file', filePath),
   // 操作PatientList.json文件 包含读取以及写入
   readPatientList: () => ipcRenderer.invoke('read-patient-list'),
-  writePatientList: (patientList) => ipcRenderer.invoke('write-patient-list', patientList)
+  writePatientList: (patientList) => ipcRenderer.invoke('write-patient-list', patientList),
+  //读写 Settings.json文件
+  readSettings: () => ipcRenderer.invoke('read-settings'),
+  writeSettings: (settings) => ipcRenderer.invoke('write-settings', settings)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

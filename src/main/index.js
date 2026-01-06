@@ -15,6 +15,8 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import fs from 'fs' // 添加fs模块导入
 import path from 'path' // 添加path模块导入
+// 定义settingsPath文件夹路径是../renderer/src/assets/Setting/
+import settingsJson from '../renderer/src/assets/Setting/Setting.json'
 
 // 全局变量，用于存储窗口和托盘引用
 let mainWindow = null
@@ -650,6 +652,86 @@ ipcMain.handle('write-patient-list', async (event, patientListJson) => {
     return { success: true, isNewFile }
   } catch (error) {
     console.error('write-patient-list error:', error)
+    throw error
+  }
+})
+
+// 读取Settings.json文件
+ipcMain.handle('read-settings', async () => {
+  try {
+    const userDataPath = app.getPath('userData')
+    const pacsImgPath = path.join(userDataPath, 'PacsImg')
+    const AppSettings = path.join(pacsImgPath, 'AppSettings')
+    const settingsPath = path.join(AppSettings, 'Setting.json')
+
+    // 检查PacsImg文件夹是否存在，如果不存在则创建
+    if (
+      !(await fs.promises
+        .access(pacsImgPath)
+        .then(() => true)
+        .catch(() => false))
+    ) {
+      await fs.promises.mkdir(pacsImgPath, { recursive: true })
+    }
+
+    // 检查AppSettings文件夹是否存在，如果不存在则创建
+    if (
+      !(await fs.promises
+        .access(AppSettings)
+        .then(() => true)
+        .catch(() => false))
+    ) {
+      await fs.promises.mkdir(AppSettings, { recursive: true })
+    }
+
+    // 检查Setting.json文件是否存在，如果不存在则从renderer\src\assets\Setting中复制一份Setting.json文件
+    if (
+      !(await fs.promises
+        .access(settingsPath)
+        .then(() => true)
+        .catch(() => false))
+    ) {
+      // 读取settingsJson文件内容将接收到的内容转换成buffer类型
+      const settingsJsonContent = JSON.stringify(settingsJson, null, 2)
+      await fs.promises.writeFile(settingsPath, settingsJsonContent, 'utf8')
+    }
+
+    // 读取文件内容
+    const data = await fs.promises.readFile(settingsPath, 'utf8')
+    return { success: true, data: JSON.parse(data) }
+  } catch (error) {
+    console.error('read-settings error:', error)
+    throw error
+  }
+})
+
+// 直接覆盖Settings.json文件
+ipcMain.handle('write-settings', async (event, settingsJson) => {
+  try {
+    const userDataPath = app.getPath('userData')
+    const pacsImgPath = path.join(userDataPath, 'PacsImg')
+    const AppSettings = path.join(pacsImgPath, 'AppSettings')
+    const settingsPath = path.join(AppSettings, 'Setting.json')
+
+    // 解析新的JSON数据
+    const newSettingsData = JSON.parse(settingsJson)
+
+    // 检查AppSettings文件夹是否存在，如果不存在则创建
+    if (
+      !(await fs.promises
+        .access(AppSettings)
+        .then(() => true)
+        .catch(() => false))
+    ) {
+      await fs.promises.mkdir(AppSettings, { recursive: true })
+    }
+
+    // 写入更新后的数据
+    await fs.promises.writeFile(settingsPath, JSON.stringify(newSettingsData, null, 2), 'utf8')
+
+    return { success: true }
+  } catch (error) {
+    console.error('write-settings error:', error)
     throw error
   }
 })
